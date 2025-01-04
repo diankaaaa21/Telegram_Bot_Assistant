@@ -35,15 +35,27 @@ This repository contains a Python script for a Telegram bot that acts as an assi
 **1. Clone the repository:**
 ```sh
 bash
-git clone https://github.com/your-repo/chatgpt-telegram-bot.git
-cd chatgpt-telegram-bot
+git clone https://github.com/diankaaaa21/Telegram_Bot_Assistant.git
+cd Telegram Bot Assistant
 ```
 **2. Install required libraries:**
+
+The bot requires several Python libraries. You can install them using pip:
 ```sh
 bash
-pip install requests pytelegrambotapi googletrans emoji
+pip install requests pytelegrambotapi googletrans emoji pyTelegramBotAPI python-dotenv 
 ```
-**3. Set up the environment:**
+
+**3. Create a .env file:**
+
+The bot requires environment variables. In the root directory, create a .env file and add the following lines:
+
+```sh
+TELEGRAM_BOT_TOKEN=your_telegram_bot_token
+API_KEY=your_rapidapi_key
+```
+
+**4. Set up the environment:**
 
 - Replace the bot token in the script:
 ```sh
@@ -59,7 +71,7 @@ headers = {
     "Content-Type": "application/json"
 }
 ```
-**4. Add the required image (gpt.png) for the /start command in the same directory.**
+**5. Add the required image (gpt.png) for the /start command in the same directory.**
 
 #### Running the Bot
 Run the script using Python:
@@ -73,6 +85,13 @@ python bot.py
 - Prompts the user to choose their preferred language.
 /history
 - Displays the user's command history, including the commands and associated texts.
+
+### Logging
+
+The bot logs all key events in the stderr.txt file. If there are any errors or problems with the API, you will find detailed information in this file.
+####Possible Errors
+- API Error: If the API is unresponsive or there is a network issue, the bot will display an error message.
+- Missing Tokens: If the .env file does not contain values for TELEGRAM_BOT_TOKEN or API_KEY, the bot will terminate with an error.
 
 ### Code Overview
 #### Main Components
