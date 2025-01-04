@@ -6,7 +6,7 @@ from googletrans import Translator
 
 translator = Translator()
 
-bot = telebot.TeleBot('7791090205:AAHEjfHReZ61oW-f_CYjJi9YLGmHJMIeU6M')
+bot = telebot.TeleBot('YOUR_TELEGRAM_TOKEN')
 
 user_data = {}
 history_data = {}
