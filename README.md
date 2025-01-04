@@ -1,7 +1,9 @@
 # Telegram Bot: ChatGPT Assistant
 This repository contains a Python script for a Telegram bot that acts as an assistant, allowing users to interact with a GPT-like API for answers to their queries. The bot supports English and Russian languages, logs user interactions, and provides a history of commands.
 
+
 ## Features
+
 **1. Language Selection:**
 
 - Users can select their preferred language: Russian or English.
@@ -31,13 +33,16 @@ This repository contains a Python script for a Telegram bot that acts as an assi
 - Telegram bot token from BotFather.
 - RapidAPI key for accessing the GPT API.
 
+
 #### Installation
+
 **1. Clone the repository:**
 ```sh
 bash
 git clone https://github.com/diankaaaa21/Telegram_Bot_Assistant.git
 cd Telegram Bot Assistant
 ```
+
 **2. Install required libraries:**
 
 The bot requires several Python libraries. You can install them using pip:
@@ -71,6 +76,7 @@ headers = {
     "Content-Type": "application/json"
 }
 ```
+
 **5. Add the required image (gpt.png) for the /start command in the same directory.**
 
 #### Running the Bot
@@ -79,6 +85,8 @@ Run the script using Python:
 bash
 python bot.py
 ```
+
+
 ### Commands
 - /start: 
 Initiates interaction with the bot.
@@ -88,6 +96,7 @@ Initiates interaction with the bot.
 - /history: 
 Displays the user's command history, including the commands and associated texts.
 
+
 ### Logging
 
 The bot logs all key events in the stderr.txt file. If there are any errors or problems with the API, you will find detailed information in this file.
@@ -95,13 +104,16 @@ The bot logs all key events in the stderr.txt file. If there are any errors or p
 - API Error: If the API is unresponsive or there is a network issue, the bot will display an error message.
 - Missing Tokens: If the .env file does not contain values for TELEGRAM_BOT_TOKEN or API_KEY, the bot will terminate with an error.
 
+
 ### Code Overview
+
 #### Main Components
+
 **1. Language Selection:**
 
 - The bot provides buttons for Russian and English using a custom keyboard.
 - User language preference is saved in a dictionary (user_data).
--
+
 **2. Question Handling:**
 
 - The bot accepts free-text questions and forwards them to the ChatGPT API.
@@ -119,6 +131,7 @@ The bot logs all key events in the stderr.txt file. If there are any errors or p
 #### Error Handling
 - Logs API and bot errors to the console.
 - Notifies users if something goes wrong.
+
 
 ## Example Interaction
 
@@ -150,16 +163,19 @@ History of request:
 Command: start, Text: /start
 Command: ask, Text: What is the sense of life?
 ```
+
 ## Dependencies
 - **requests**: For making API requests.
 - **pyTelegramBotAPI**: For Telegram bot functionality.
 - **googletrans**: For translating responses.
 - **emoji**: For adding emojis to messages.
 
+
 ## Notes
 1. Ensure the gpt.png file exists in the working directory for the /start command.
 2. Avoid sharing your bot token and API key publicly.
 3. The bot currently supports a limited set of languages for translation.
+
 
 ## Contributing
 Contributions are welcome! Feel free to open issues or submit pull requests to improve functionality or fix bugs.
