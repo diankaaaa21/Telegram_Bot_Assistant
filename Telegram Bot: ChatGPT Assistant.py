@@ -3,10 +3,27 @@ import telebot
 from telebot.types import KeyboardButton, ReplyKeyboardMarkup, ReplyKeyboardRemove
 import emoji
 from googletrans import Translator
+from dotenv import load_dotenv
+import os
+import logging
 
+logger = logging.getLogger('Process_checker')
+file_handler = logging.FileHandler("stderr.txt")
+file_handler.setLevel(logging.INFO)
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+file_handler.setFormatter(formatter)
+logger.setLevel(logging.DEBUG)
+
+load_dotenv()
+token = os.getenv("TELEGRAM_BOT_TOKEN")
+key = os.getenv("API_KEY")
 translator = Translator()
 
-bot = telebot.TeleBot('YOUR_TELEGRAM_TOKEN')
+if not token or not key:
+    logger.critical("TELEGRAM_BOT_TOKEN or API_KEY is missing in environment variables.")
+    raise ValueError('TELEGRAM_BOT_TOKEN or API_KEY is missing')
+
+bot = telebot.TeleBot(token)
 
 user_data = {}
 history_data = {}
@@ -24,8 +41,11 @@ def choice_button():
 @bot.message_handler(commands=['start'])
 def start(message):
     log_command(message, 'start')
-    with open('gpt.png', 'rb') as photo:
-        bot.send_photo(message.chat.id, photo=photo)
+    try:
+        with open('gpt.png', 'rb') as photo:
+            bot.send_photo(message.chat.id, photo=photo)
+    except FileNotFoundError:
+        logger.warning('Image "gpt.png" not found. Skipping photo.')
     bot.send_message(message.from_user.id,
                      'Please choose your native language.', reply_markup=choice_button())
 
@@ -64,15 +84,21 @@ def send_answer(user_question):
         if response_data and 'result' in response_data:
             content = response_data['result']
             if user_data[user_question]["language"] == "Russian":
-                translated_content = translator.translate(content, src='en', dest='ru').text
+                try:
+                    translated_content = translator.translate(content, src='en', dest='ru').text
+                except Exception as e:
+                    logger.warning(f'Translation failed: {e}')
+                    bot.send_message(user_question, "Ошибка перевода. Отправлен ответ на английском.")
+                    translated_content = content
                 bot.send_message(user_question, f"Ответ: {translated_content}")
             else:
                 bot.send_message(user_question, f"Answer: {content}")
         else:
+            logger.error('Empty or invalid response from API')
             bot.send_message(user_question, "An error occurred while retrieving the response.")
     except Exception as e:
         bot.send_message(user_question, "An error occurred while processing your request. Please try again.")
-        print("An error occurred:", str(e))
+        logger.error(f'An error occurred:", {e}')
 
 
 def get_response(question):
@@ -88,7 +114,7 @@ def get_response(question):
             "web_access": False
         }
         headers = {
-            "x-rapidapi-key": "edac2fa23cmsh5279dfb3bc3a1c7p1034e1jsn9e9ee202dec5",
+            "x-rapidapi-key": key,
             "x-rapidapi-host": "chatgpt-42.p.rapidapi.com",
             "Content-Type": "application/json"
         }
@@ -97,12 +123,10 @@ def get_response(question):
         if response.status_code == 200:
             return response.json()
         else:
-            print("An error occurred while retrieving the response from API. Status code:", response.status_code)
+            logger.error("An error occurred while retrieving the response from API. Status code:", response.status_code)
             return None
-
-
     except Exception as e:
-        print("An error occurred:", str(e))
+        logger.error(f"An error while calling API: {e}")
         return None
 
 
@@ -126,4 +150,9 @@ def log_command(message, command, params=None):
     history_data[chat_id].append({'command': command, 'params': params, 'text': message.text})
 
 
-bot.polling()
+if __name__ == "__main__":
+    logger.info('Bot is starting..')
+    try:
+        bot.polling()
+    except Exception as e:
+        logger.critical(f"Critical error in polling: {e}")
