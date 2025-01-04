@@ -80,12 +80,12 @@ bash
 python bot.py
 ```
 ### Commands
-**/start**
+- /start: 
 Initiates interaction with the bot.
 
-**Prompts the user to choose their preferred language.**
+- Prompts the user to choose their preferred language.
 
-**/history**
+- /history: 
 Displays the user's command history, including the commands and associated texts.
 
 ### Logging
