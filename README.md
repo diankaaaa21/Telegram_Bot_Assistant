@@ -89,7 +89,7 @@ python bot.py
 ### Logging
 
 The bot logs all key events in the stderr.txt file. If there are any errors or problems with the API, you will find detailed information in this file.
-####Possible Errors
+#### Possible Errors
 - API Error: If the API is unresponsive or there is a network issue, the bot will display an error message.
 - Missing Tokens: If the .env file does not contain values for TELEGRAM_BOT_TOKEN or API_KEY, the bot will terminate with an error.
 
