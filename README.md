@@ -81,10 +81,12 @@ python bot.py
 ```
 ### Commands
 **/start**
-  Initiates interaction with the bot.
+Initiates interaction with the bot.
+
 **Prompts the user to choose their preferred language.**
+
 **/history**
-  Displays the user's command history, including the commands and associated texts.
+Displays the user's command history, including the commands and associated texts.
 
 ### Logging
 
