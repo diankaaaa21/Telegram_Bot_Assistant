@@ -7,12 +7,17 @@ from dotenv import load_dotenv
 import os
 import logging
 
-logger = logging.getLogger('Process_checker')
-file_handler = logging.FileHandler("stderr.txt")
-file_handler.setLevel(logging.INFO)
-formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
-file_handler.setFormatter(formatter)
-logger.setLevel(logging.DEBUG)
+def configurate_logger():
+    logger = logging.getLogger('Process_checker')
+    file_handler = logging.FileHandler("stderr.txt")
+    file_handler.setLevel(logging.INFO)
+    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+    file_handler.setFormatter(formatter)
+    logger.addHandler(file_handler)
+    logger.setLevel(logging.DEBUG)
+
+logger = configurate_logger()
+
 
 load_dotenv()
 token = os.getenv("TELEGRAM_BOT_TOKEN")
@@ -32,9 +37,10 @@ history_data = {}
 def choice_button():
     button_1 = KeyboardButton(text='Russian')
     button_2 = KeyboardButton(text='English')
-
+    button_3 = KeyboardButton(text='Polish')
+    
     keyboard = ReplyKeyboardMarkup()
-    keyboard.add(button_1, button_2)
+    keyboard.add(button_1, button_2, button_3)
     return keyboard
 
 
@@ -68,6 +74,15 @@ def english_answer(message):
                      reply_markup=ReplyKeyboardRemove())
 
 
+@bot.message_handler(func=lambda message: message.text == "Polish")
+def polish_answer(message):
+    user_data[message.chat.id] = {"language": "Polish"}
+    send_emoji = emoji.emojize(":grinning_face:")
+    bot.send_message(message.from_user.id,
+                     f"Cześć! Jestem telegram botem, który może zastąpić Czat GPT dla Ciebie. Zadaj mi jakieś pytania. {send_emoji}",
+                     reply_markup=ReplyKeyboardRemove())
+
+
 @bot.message_handler(func=lambda message: True)
 def ask_question(message):
     if message.chat.id not in user_data:
@@ -91,6 +106,14 @@ def send_answer(user_question):
                     bot.send_message(user_question, "Ошибка перевода. Отправлен ответ на английском.")
                     translated_content = content
                 bot.send_message(user_question, f"Ответ: {translated_content}")
+            elif user_data[user_question]["language"] == "Polish":
+                try:
+                    translated_content = translator.translate(content, src='en', dest='pl').text
+                except Exception as e:
+                    logger.warning(f'Translation failed: {e}')
+                    bot.send_message(user_question, "Błąd tłumaczenia. Wysłana odpowiedź po angielsku.")
+                    translated_content = content
+                bot.send_message(user_question, f"Odpowiedż: {translated_content}")    
             else:
                 bot.send_message(user_question, f"Answer: {content}")
         else:
