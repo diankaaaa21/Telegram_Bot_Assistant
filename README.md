@@ -1,5 +1,5 @@
 # Telegram Bot: ChatGPT Assistant
-This repository contains a Python script for a Telegram bot that acts as an assistant, allowing users to interact with a GPT-like API for answers to their queries. The bot supports English and Russian languages, logs user interactions, and provides a history of commands.
+This repository contains a Python script for a Telegram bot that acts as an assistant, allowing users to interact with a GPT-like API for answers to their queries. The bot supports English, Russian and Polish languages, logs user interactions, and provides a history of commands.
 
 
 ## Features
@@ -149,13 +149,17 @@ Please choose your native language.
 ```sh
 Hello! I'am telegram bot, that can replace Chat GPT for you. Ask me any questions. 😊
 ```
-4. User asks a question:
+4. User selects Polish:
+```sh
+Hello! I'am telegram bot, that can replace Chat GPT for you. Ask me any questions. 😊
+```
+5. User asks a question:
 ```sh
 makefile
 What is the sense of life?
 Answer: The sense of life depends on your goals and values.
 ```
-5. User retrieves history:
+6. User retrieves history:
 ```sh
 yaml
 /history
