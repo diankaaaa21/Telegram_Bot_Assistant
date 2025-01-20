@@ -6,6 +6,7 @@ from googletrans import Translator
 from dotenv import load_dotenv
 import os
 import logging
+import mysql.connector
 
 def configurate_logger():
     logger = logging.getLogger('Process_checker')
@@ -34,6 +35,19 @@ user_data = {}
 history_data = {}
 
 
+try:
+    conn = mysql.connector.connect(
+        host=os.getenv("DB_HOST"),
+        user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASSWORD"),
+        database=os.getenv("DB_NAME")
+    )
+    cursor = conn.cursor()
+    logger.info("Connected to MySQL database successfully")
+except mysql.connector.Error as error:
+    logger.critical("Failed to connect to MySQL database")
+
+
 def choice_button():
     button_1 = KeyboardButton(text='Russian')
     button_2 = KeyboardButton(text='English')
@@ -56,9 +70,19 @@ def start(message):
                      'Please choose your native language.', reply_markup=choice_button())
 
 
+def save_language(user_id, language):
+    try:
+        cursor.execute("INSERT INTO users (user, language) VALUES (%S, %S) ON DUBLICATE KEY UPDATE language='%s'")
+        conn.commit()
+        logger.info(f'Language {language} saved for {user_id}')
+    except mysql.connector.Error as err:
+        logger.error(f"Error saving language {err}")
+
+
 @bot.message_handler(func=lambda message: message.text == "Russian")
 def russian_answer(message):
     user_data[message.chat.id] = {"language": "Russian"}
+    save_laguage(message.chat.id, "Russian")
     send_emoji = emoji.emojize(":grinning_face:")
     bot.send_message(message.from_user.id,
                      f"Привет! Я телеграмм бот, который может заменить тебе Chat GPT. Задавай мне любые вопросы.{send_emoji}",
@@ -68,6 +92,7 @@ def russian_answer(message):
 @bot.message_handler(func=lambda message: message.text == "English")
 def english_answer(message):
     user_data[message.chat.id] = {"language": "English"}
+    save_laguage(message.chat.id, "English")
     send_emoji = emoji.emojize(":grinning_face:")
     bot.send_message(message.from_user.id,
                      f"Hello! I'am telegram bot, that can replace Chat GPT for you. Ask me any questions.{send_emoji}",
@@ -77,6 +102,7 @@ def english_answer(message):
 @bot.message_handler(func=lambda message: message.text == "Polish")
 def polish_answer(message):
     user_data[message.chat.id] = {"language": "Polish"}
+    save_laguage(message.chat.id, "Polish")
     send_emoji = emoji.emojize(":grinning_face:")
     bot.send_message(message.from_user.id,
                      f"Cześć! Jestem telegram botem, który może zastąpić Czat GPT dla Ciebie. Zadaj mi jakieś pytania. {send_emoji}",
