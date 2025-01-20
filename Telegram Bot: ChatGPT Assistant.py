@@ -167,8 +167,8 @@ def log_command(message, command, params=None):
     history_data[chat_id].append({'command': command, 'params': params, 'text': message.text})
 
 
-@bot.message_handler(commands=['history'])
-def statistic():
+@bot.message_handler(commands=['statistics'])
+def statistics():
     stats = get_statistics()
     if stats:
         stats_message = "\n".join(f"{row[0]}: row[1] for row in stats")
