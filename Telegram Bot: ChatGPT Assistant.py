@@ -5,19 +5,9 @@ import emoji
 from googletrans import Translator
 from dotenv import load_dotenv
 import os
-import logging
-import mysql.connector
+from database import save_language
+from logging import configurate_logger
 
-def configurate_logger():
-    logger = logging.getLogger('Process_checker')
-    file_handler = logging.FileHandler("stderr.txt")
-    file_handler.setLevel(logging.INFO)
-    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
-    file_handler.setFormatter(formatter)
-    logger.addHandler(file_handler)
-    logger.setLevel(logging.DEBUG)
-
-logger = configurate_logger()
 
 
 load_dotenv()
@@ -33,19 +23,6 @@ bot = telebot.TeleBot(token)
 
 user_data = {}
 history_data = {}
-
-
-try:
-    conn = mysql.connector.connect(
-        host=os.getenv("DB_HOST"),
-        user=os.getenv("DB_USER"),
-        password=os.getenv("DB_PASSWORD"),
-        database=os.getenv("DB_NAME")
-    )
-    cursor = conn.cursor()
-    logger.info("Connected to MySQL database successfully")
-except mysql.connector.Error as error:
-    logger.critical("Failed to connect to MySQL database")
 
 
 def choice_button():
@@ -68,15 +45,6 @@ def start(message):
         logger.warning('Image "gpt.png" not found. Skipping photo.')
     bot.send_message(message.from_user.id,
                      'Please choose your native language.', reply_markup=choice_button())
-
-
-def save_language(user_id, language):
-    try:
-        cursor.execute("INSERT INTO users (user, language) VALUES (%S, %S) ON DUBLICATE KEY UPDATE language='%s'")
-        conn.commit()
-        logger.info(f'Language {language} saved for {user_id}')
-    except mysql.connector.Error as err:
-        logger.error(f"Error saving language {err}")
 
 
 @bot.message_handler(func=lambda message: message.text == "Russian")
@@ -198,6 +166,16 @@ def log_command(message, command, params=None):
         history_data[chat_id] = []
     history_data[chat_id].append({'command': command, 'params': params, 'text': message.text})
 
+
+@bot.message_handler(commands=['history'])
+def statistic():
+    stats = get_statistics()
+    if stats:
+        stats_message = "\n".join(f"{row[0]}: row[1] for row in stats")
+        bot.send.message(message.chat.id, f"Language selection statistics: {stats_message} ")
+    else:
+        bot.send.message(message.chat.id, "No statics available")
+    
 
 if __name__ == "__main__":
     logger.info('Bot is starting..')
