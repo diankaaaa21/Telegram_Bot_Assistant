@@ -5,18 +5,9 @@ import emoji
 from googletrans import Translator
 from dotenv import load_dotenv
 import os
-import logging
+from database import save_language
+from logging import configurate_logger
 
-def configurate_logger():
-    logger = logging.getLogger('Process_checker')
-    file_handler = logging.FileHandler("stderr.txt")
-    file_handler.setLevel(logging.INFO)
-    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
-    file_handler.setFormatter(formatter)
-    logger.addHandler(file_handler)
-    logger.setLevel(logging.DEBUG)
-
-logger = configurate_logger()
 
 
 load_dotenv()
@@ -59,6 +50,7 @@ def start(message):
 @bot.message_handler(func=lambda message: message.text == "Russian")
 def russian_answer(message):
     user_data[message.chat.id] = {"language": "Russian"}
+    save_laguage(message.chat.id, "Russian")
     send_emoji = emoji.emojize(":grinning_face:")
     bot.send_message(message.from_user.id,
                      f"Привет! Я телеграмм бот, который может заменить тебе Chat GPT. Задавай мне любые вопросы.{send_emoji}",
@@ -68,6 +60,7 @@ def russian_answer(message):
 @bot.message_handler(func=lambda message: message.text == "English")
 def english_answer(message):
     user_data[message.chat.id] = {"language": "English"}
+    save_laguage(message.chat.id, "English")
     send_emoji = emoji.emojize(":grinning_face:")
     bot.send_message(message.from_user.id,
                      f"Hello! I'am telegram bot, that can replace Chat GPT for you. Ask me any questions.{send_emoji}",
@@ -77,6 +70,7 @@ def english_answer(message):
 @bot.message_handler(func=lambda message: message.text == "Polish")
 def polish_answer(message):
     user_data[message.chat.id] = {"language": "Polish"}
+    save_laguage(message.chat.id, "Polish")
     send_emoji = emoji.emojize(":grinning_face:")
     bot.send_message(message.from_user.id,
                      f"Cześć! Jestem telegram botem, który może zastąpić Czat GPT dla Ciebie. Zadaj mi jakieś pytania. {send_emoji}",
@@ -172,6 +166,16 @@ def log_command(message, command, params=None):
         history_data[chat_id] = []
     history_data[chat_id].append({'command': command, 'params': params, 'text': message.text})
 
+
+@bot.message_handler(commands=['history'])
+def statistic():
+    stats = get_statistics()
+    if stats:
+        stats_message = "\n".join(f"{row[0]}: row[1] for row in stats")
+        bot.send.message(message.chat.id, f"Language selection statistics: {stats_message} ")
+    else:
+        bot.send.message(message.chat.id, "No statics available")
+    
 
 if __name__ == "__main__":
     logger.info('Bot is starting..')
