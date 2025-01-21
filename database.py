@@ -21,6 +21,9 @@ except mysql.connector.Error as error:
     logger.critical("Failed to connect to MySQL database")
 
 
+connection_pool = pooling.MySQLConnectionPool(pool_name="mypool", pool_size=5, **db_config)
+
+
 def execute_query(query, params=None):
     try:
         if params is None:
@@ -29,7 +32,11 @@ def execute_query(query, params=None):
         return cursor.fetchall() if cursor.with_rows else None
     except mysql.connector.Error as err:
         logger.error(f"MySQL error {err}")
-
+    finally:
+        if conn.is_conneced():
+            cursor.close()
+            conn.close()
+    
 
 def save_language(user_id, language):
     query = """
