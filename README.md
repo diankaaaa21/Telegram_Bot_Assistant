@@ -6,8 +6,8 @@ This repository contains a Python script for a Telegram bot that acts as an assi
 
 **1. Language Selection:**
 
-- Users can select their preferred language: Russian or English.
-- The bot translates answers into Russian if selected.
+- Users can select their preferred language: Russian, English or Polish.
+- The bot translates answers into the selected language.
 
 **2. Question Handling:**
 
@@ -27,11 +27,19 @@ This repository contains a Python script for a Telegram bot that acts as an assi
 
 - Adds a friendly touch to bot messages using emojis.
 
+**6. MySQL Database Integration:**
+
+- The bot uses a MySQL database to store user language preferences and track their usage.
+- Language usage statistics are analyzed to determine which languages are most frequently selected.
+- This analysis can guide future improvements to the bot's functionality, such as adding support for additional languages or optimizing translation performance.
+
+
 ## How to Set Up
 #### Prerequisites
 - Python 3.8 or higher.
 - Telegram bot token from BotFather.
 - RapidAPI key for accessing the GPT API.
+- MySQL database setup.
 
 
 #### Installation
@@ -51,16 +59,34 @@ bash
 pip install requests pytelegrambotapi googletrans emoji pyTelegramBotAPI python-dotenv 
 ```
 
-**3. Create a .env file:**
+**3. Set up MySQL database:**
 
-The bot requires environment variables. In the root directory, create a .env file and add the following lines:
+Create a database and table for storing language preferences:
+
+```sh
+CREATE DATABASE telegram_bot;
+USE telegram_bot;
+
+CREATE TABLE telegram_users (
+    user_id BIGINT PRIMARY KEY,
+    language VARCHAR(50)
+);
+```
+
+**4. Create a .env file:**
+
+In the root directory, add the following:
 
 ```sh
 TELEGRAM_BOT_TOKEN=your_telegram_bot_token
 API_KEY=your_rapidapi_key
+DB_HOST=your_database_host
+DB_USER=your_database_user
+DB_PASSWORD=your_database_password
+DB_NAME=telegram_bot
 ```
 
-**4. Set up the environment:**
+**5. Set up the environment:**
 
 - Replace the bot token in the script:
 ```sh
@@ -77,7 +103,7 @@ headers = {
 }
 ```
 
-**5. Add the required image (gpt.png) for the /start command in the same directory.**
+**6. Add the required image (gpt.png) for the /start command in the same directory.**
 
 #### Running the Bot
 Run the script using Python:
@@ -88,13 +114,30 @@ python bot.py
 
 
 ### Commands
-- /start: 
-Initiates interaction with the bot.
-
-- Prompts the user to choose their preferred language.
-
+- /start:
+Initiates interaction with the bot and prompts the user to choose their preferred language.
 - /history: 
 Displays the user's command history, including the commands and associated texts.
+- statistics:
+(Optional) Displays language usage statistics stored in the MySQL database.
+
+
+### MySQL Database Usage
+The bot uses a MySQL database for two main purposes:
+**1. Storing User Language Preferences:**
+    - When a user selects a language, it is stored in the telegram_users table.
+    - If the user changes their language, the record is updated using ON DUPLICATE KEY.
+**2. Language Usage Analysis:**
+    - The database aggregates statistics on the frequency of language selection.
+    - The /statistics command retrieves this data, helping to identify which languages are most popular.
+    - This information can guide future improvements to the bot, such as adding new language support or enhancing translation quality.
+Example SQL query for statistics:
+```sh
+SELECT language, COUNT(*) AS count
+FROM telegram_users
+GROUP BY language
+ORDER BY count DESC;
+```
 
 
 ### Logging
@@ -111,7 +154,7 @@ The bot logs all key events in the stderr.txt file. If there are any errors or p
 
 **1. Language Selection:**
 
-- The bot provides buttons for Russian and English using a custom keyboard.
+- The bot provides buttons for Russian, English and Polish using a custom keyboard.
 - User language preference is saved in a dictionary (user_data).
 
 **2. Question Handling:**
@@ -139,7 +182,7 @@ The bot logs all key events in the stderr.txt file. If there are any errors or p
 ```sh
 css
 Please choose your native language.
-[ Russian ] [ English ]
+[ Russian ] [ English ] [ Polish ]
 ```
 2. User selects Russian:
 ```sh
@@ -173,12 +216,15 @@ Command: ask, Text: What is the sense of life?
 - **pyTelegramBotAPI**: For Telegram bot functionality.
 - **googletrans**: For translating responses.
 - **emoji**: For adding emojis to messages.
+- **mysql-connector-python:** For MySQL database integration.
+- **python-dotenv:** For managing environment variables.
 
 
 ## Notes
 1. Ensure the gpt.png file exists in the working directory for the /start command.
 2. Avoid sharing your bot token and API key publicly.
 3. The bot currently supports a limited set of languages for translation.
+4. Regulary back up your database to prevent data loss.
 
 
 ## Contributing
