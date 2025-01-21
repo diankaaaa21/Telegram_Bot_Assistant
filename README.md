@@ -105,7 +105,7 @@ headers = {
 
 **6. Add the required image (gpt.png) for the /start command in the same directory.**
 
-#### Running the Bot
+## Running the Bot
 Run the script using Python:
 ```sh
 bash
@@ -113,7 +113,7 @@ python bot.py
 ```
 
 
-### Commands
+## Commands
 - /start:
 Initiates interaction with the bot and prompts the user to choose their preferred language.
 - /history: 
@@ -122,7 +122,7 @@ Displays the user's command history, including the commands and associated texts
 (Optional) Displays language usage statistics stored in the MySQL database.
 
 
-### MySQL Database Usage
+## MySQL Database Usage
 The bot uses a MySQL database for two main purposes:
 
 **1. Storing User Language Preferences:**
@@ -142,7 +142,7 @@ ORDER BY count DESC;
 ```
 
 
-### Logging
+## Logging
 
 The bot logs all key events in the stderr.txt file. If there are any errors or problems with the API, you will find detailed information in this file.
 #### Possible Errors
@@ -150,7 +150,7 @@ The bot logs all key events in the stderr.txt file. If there are any errors or p
 - Missing Tokens: If the .env file does not contain values for TELEGRAM_BOT_TOKEN or API_KEY, the bot will terminate with an error.
 
 
-### Code Overview
+## Code Overview
 
 #### Main Components
 
