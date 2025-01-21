@@ -124,13 +124,15 @@ Displays the user's command history, including the commands and associated texts
 
 ### MySQL Database Usage
 The bot uses a MySQL database for two main purposes:
+
 **1. Storing User Language Preferences:**
 - When a user selects a language, it is stored in the telegram_users table.
 - If the user changes their language, the record is updated using ON DUPLICATE KEY.
+
 **2. Language Usage Analysis:**
-    - The database aggregates statistics on the frequency of language selection.
-    - The /statistics command retrieves this data, helping to identify which languages are most popular.
-    - This information can guide future improvements to the bot, such as adding new language support or enhancing translation quality.
+- The database aggregates statistics on the frequency of language selection.
+- The /statistics command retrieves this data, helping to identify which languages are most popular.
+- This information can guide future improvements to the bot, such as adding new language support or enhancing translation quality.
 Example SQL query for statistics:
 ```sh
 SELECT language, COUNT(*) AS count
