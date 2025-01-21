@@ -33,7 +33,7 @@ def execute_query(query, params=None):
 
 def save_language(user_id, language):
     query = """
-    INSERT INTO users (user_id, language) VALUES (%s, %s) 
+    INSERT INTO teegram_users (user_id, language) VALUES (%s, %s) 
     ON DUBLICATE KEY UPDATE language='%s'"""
     execute_query(query, (user_id, language))
 
