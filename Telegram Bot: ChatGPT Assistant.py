@@ -1,5 +1,6 @@
 import requests
 import telebot
+from dns.update import Update
 from telebot.types import KeyboardButton, ReplyKeyboardMarkup, ReplyKeyboardRemove
 import emoji
 from googletrans import Translator
@@ -7,19 +8,20 @@ from dotenv import load_dotenv
 import os
 from database import save_language
 from logging import configurate_logger
-
+from flask import Flask, request
 
 
 load_dotenv()
-token = os.getenv("TELEGRAM_BOT_TOKEN")
-key = os.getenv("API_KEY")
+TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+KEY = os.getenv("API_KEY")
 translator = Translator()
+app = Flask(__name__)
 
-if not token or not key:
+if not TOKEN or not KEY:
     logger.critical("TELEGRAM_BOT_TOKEN or API_KEY is missing in environment variables.")
     raise ValueError('TELEGRAM_BOT_TOKEN or API_KEY is missing')
 
-bot = telebot.TeleBot(token)
+bot = telebot.TeleBot(TOKEN)
 
 user_data = {}
 history_data = {}
@@ -50,7 +52,7 @@ def start(message):
 @bot.message_handler(func=lambda message: message.text == "Russian")
 def russian_answer(message):
     user_data[message.chat.id] = {"language": "Russian"}
-    save_laguage(message.chat.id, "Russian")
+    save_language(message.chat.id, "Russian")
     send_emoji = emoji.emojize(":grinning_face:")
     bot.send_message(message.from_user.id,
                      f"Привет! Я телеграмм бот, который может заменить тебе Chat GPT. Задавай мне любые вопросы.{send_emoji}",
@@ -60,7 +62,7 @@ def russian_answer(message):
 @bot.message_handler(func=lambda message: message.text == "English")
 def english_answer(message):
     user_data[message.chat.id] = {"language": "English"}
-    save_laguage(message.chat.id, "English")
+    save_language(message.chat.id, "English")
     send_emoji = emoji.emojize(":grinning_face:")
     bot.send_message(message.from_user.id,
                      f"Hello! I'am telegram bot, that can replace Chat GPT for you. Ask me any questions.{send_emoji}",
@@ -70,7 +72,7 @@ def english_answer(message):
 @bot.message_handler(func=lambda message: message.text == "Polish")
 def polish_answer(message):
     user_data[message.chat.id] = {"language": "Polish"}
-    save_laguage(message.chat.id, "Polish")
+    save_language(message.chat.id, "Polish")
     send_emoji = emoji.emojize(":grinning_face:")
     bot.send_message(message.from_user.id,
                      f"Cześć! Jestem telegram botem, który może zastąpić Czat GPT dla Ciebie. Zadaj mi jakieś pytania. {send_emoji}",
@@ -131,17 +133,18 @@ def get_response(question):
             "web_access": False
         }
         headers = {
-            "x-rapidapi-key": key,
+            "x-rapidapi-key": KEY,
             "x-rapidapi-host": "chatgpt-42.p.rapidapi.com",
             "Content-Type": "application/json"
         }
 
         response = requests.post(url, json=payload, headers=headers)
         if response.status_code == 200:
-            return response.json()
-        else:
-            logger.error("An error occurred while retrieving the response from API. Status code:", response.status_code)
-            return None
+            try:
+                return response.json()
+            except ValueError:
+                logger.error("An error occurred while retrieving the response from API. Status code:", response.status_code)
+                return None
     except Exception as e:
         logger.error(f"An error while calling API: {e}")
         return None
@@ -177,9 +180,16 @@ def statistics():
         bot.send.message(message.chat.id, "No statics available")
     
 
+@app.rout(f'/{TOKEN}', methods=["POST"])
+def webhook():
+    update = Update.de_json(request.get_json(), bot)
+    bot.process_new_update([update])
+    return 'OK', 200
+
+
 if __name__ == "__main__":
-    logger.info('Bot is starting..')
-    try:
-        bot.polling()
-    except Exception as e:
-        logger.critical(f"Critical error in polling: {e}")
+    bot.remove_webhook()
+    bot.set_webhook(url=f'http://<question>.ngrok.io/{TOKEN}')
+    app.run(host='0.0.0.0', port=5000)
+
+
