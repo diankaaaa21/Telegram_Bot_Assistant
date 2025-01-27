@@ -229,6 +229,30 @@ Command: ask, Text: What is the sense of life?
 4. Regulary back up your database to prevent data loss.
 
 
+## Webhook Integration (Flask)
+In addition to running the bot using long polling, you can configure the bot to work with a webhook using Flask.
+1. Set up webhook:
+```sh
+from flask import Flask, request
+from telegram import Update
+from telegram.ext import Dispatcher, CommandHandler, MessageHandler, Filters
+
+app = Flask(__name__)
+
+@app.route(f"/{TOKEN}", methods=["POST"])
+def webhook():
+    update = Update.de_json(request.get_json(), bot)
+    bot.process_new_update([update])
+    return "OK", 200
+
+if __name__ == "__main__":
+    bot.remove_webhook()
+    bot.set_webhook(url=f"http://<question>.ngrok.io/{TOKEN}")
+    app.run(host="0.0.0.0", port=5000)
+```
+- This sets up a webhook for the bot, allowing it to receive updates via HTTP POST requests. Replace <question> with your actual ngrok URL or web server domain.
+
+
 ## Contributing
 Contributions are welcome! Feel free to open issues or submit pull requests to improve functionality or fix bugs.
 
