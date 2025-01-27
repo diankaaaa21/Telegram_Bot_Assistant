@@ -1,11 +1,10 @@
 import os
+from file_log import configurate_logger
+
 import mysql.connector
 from dotenv import load_dotenv
 
-from logging import configurate_logger
-
 logger = configurate_logger()
-
 load_dotenv()
 
 try:
@@ -21,9 +20,6 @@ except mysql.connector.Error as error:
     logger.critical("Failed to connect to MySQL database")
 
 
-connection_pool = pooling.MySQLConnectionPool(pool_name="mypool", pool_size=5, **db_config)
-
-
 def execute_query(query, params=None):
     try:
         if params is None:
@@ -33,14 +29,14 @@ def execute_query(query, params=None):
     except mysql.connector.Error as err:
         logger.error(f"MySQL error {err}")
     finally:
-        if conn.is_conneced():
-            cursor.close()
-            conn.close()
-    
+        conn.is_connected()
+        conn.close()
+        cursor.close()
+
 
 def save_language(user_id, language):
     query = """
-    INSERT INTO teegram_users (user_id, language) VALUES (%s, %s) 
+    INSERT INTO users (user_id, language) VALUES (%s, %s) 
     ON DUBLICATE KEY UPDATE language='%s'"""
     execute_query(query, (user_id, language))
 
