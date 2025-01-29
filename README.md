@@ -247,7 +247,7 @@ def webhook():
 
 if __name__ == "__main__":
     bot.remove_webhook()
-    bot.set_webhook(url=f"http://<ngrok-id>.ngrok.io/{TOKEN}")
+    bot.set_webhook(url=f"https://your-ngrok-url.ngrok.io/{TOKEN}")
     app.run(host="0.0.0.0", port=5000)
 ```
 - This sets up a webhook for the bot, allowing it to receive updates via HTTP POST requests. Replace <question> with your actual ngrok URL or web server domain.
