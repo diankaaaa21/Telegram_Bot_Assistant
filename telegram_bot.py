@@ -1,24 +1,22 @@
 import os
-from file_log import configurate_logger
 
 import emoji
 import requests
 import telebot
-from dns.update import Update
 from dotenv import load_dotenv
-from flask import Flask, request
 from googletrans import Translator
 from telebot.types import (KeyboardButton, ReplyKeyboardMarkup,
                            ReplyKeyboardRemove)
 
 from database import logger, save_language
+from file_log import configurate_logger
 
 logger = configurate_logger()
 load_dotenv()
 TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 KEY = os.getenv("API_KEY")
 translator = Translator()
-app = Flask(__name__)
+
 
 if not TOKEN or not KEY:
     logger.critical(
@@ -166,8 +164,7 @@ def get_response(question):
             return response.json()
         else:
             logger.error(
-                f"An error occurred while retrieving the response from API. Status code:
-                {response.status_code}"
+                f"An error occurred while retrieving the response from API. Status code: {response.status_code}"
             )
             return None
     except requests.exceptions.RequestException as e:
@@ -205,22 +202,9 @@ def log_command(message, command, params=None):
 def statistics():
     stats = get_statistics()
     if stats:
-        stats_message = "\n".join([f"{row[0]}: {row[1]}" for row in stats")
+        stats_message = "\n".join([f"{row[0]}: {row[1]}" for row in stats])
         bot.send.message(
             message.chat.id, f"Language selection statistics:\n{stats_message}"
         )
     else:
         bot.send.message(message.chat.id, "No statics available")
-
-
-@app.route(f"/{TOKEN}", methods=["POST"])
-def webhook():
-    update = Update.de_json(request.get_json(), bot)
-    bot.process_new_update([update])
-    return "OK", 200
-
-
-if __name__ == "__main__":
-    bot.remove_webhook()
-    bot.set_webhook(url=f"https://your-ngrok-url.ngrok.io/{TOKEN}")
-    app.run(host="0.0.0.0", port=5000)

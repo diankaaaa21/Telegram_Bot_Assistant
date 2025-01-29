@@ -1,7 +1,9 @@
 import os
-from file_log import configurate_logger
+
 import mysql.connector
 from dotenv import load_dotenv
+
+from file_log import configurate_logger
 
 logger = configurate_logger()
 load_dotenv()
@@ -15,7 +17,7 @@ def execute_query(query, params=None):
             host=os.getenv("DB_HOST"),
             user=os.getenv("DB_USER"),
             password=os.getenv("DB_PASSWORD"),
-            database=os.getenv("DB_NAME")
+            database=os.getenv("DB_NAME"),
         ) as conn:
             with conn.cursor() as cursor:
                 cursor.execute(query, params)
