@@ -1,22 +1,20 @@
 import os
 
-import emoji
 import requests
 import telebot
 from dotenv import load_dotenv
 from googletrans import Translator
-from telebot.types import (KeyboardButton, ReplyKeyboardMarkup,
-                           ReplyKeyboardRemove)
+from telebot.types import KeyboardButton, ReplyKeyboardMarkup, ReplyKeyboardRemove
 
 from database import logger, save_language
 from file_log import configurate_logger
 
 logger = configurate_logger()
 load_dotenv()
+
 TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 KEY = os.getenv("API_KEY")
 translator = Translator()
-
 
 if not TOKEN or not KEY:
     logger.critical(
@@ -31,119 +29,104 @@ history_data = {}
 
 
 def choice_button():
-    button_1 = KeyboardButton(text="Russian")
-    button_2 = KeyboardButton(text="English")
-    button_3 = KeyboardButton(text="Polish")
-
-    keyboard = ReplyKeyboardMarkup()
-    keyboard.add(button_1, button_2, button_3)
+    keyboard = ReplyKeyboardMarkup(resize_keyboard=True)
+    keyboard.add(
+        KeyboardButton("Russian"), KeyboardButton("English"), KeyboardButton("Polish")
+    )
     return keyboard
 
 
 @bot.message_handler(commands=["start"])
 def start(message):
     log_command(message, "start")
-    try:
+
+    if os.path.exists("gpt.png"):
         with open("gpt.png", "rb") as photo:
             bot.send_photo(message.chat.id, photo=photo)
-    except FileNotFoundError:
+    else:
         logger.warning('Image "gpt.png" not found. Skipping photo.')
+
     bot.send_message(
-        message.from_user.id,
+        message.chat.id,
         "Please choose your native language.",
         reply_markup=choice_button(),
     )
 
 
-@bot.message_handler(func=lambda message: message.text == "Russian")
-def russian_answer(message):
-    user_data[message.chat.id] = {"language": "Russian"}
-    save_language(message.chat.id, "Russian")
-    send_emoji = emoji.emojize(":grinning_face:")
-    bot.send_message(
-        message.from_user.id,
-        f"Привет! Я телеграмм бот, который может заменить тебе Chat GPT. Задавай мне любые вопросы.{send_emoji}",
-        reply_markup=ReplyKeyboardRemove(),
-    )
+def set_language(message, language, greeting):
+    user_data[message.chat.id] = {"language": language}
+    save_language(message.chat.id, language)
+    bot.send_message(message.chat.id, greeting, reply_markup=ReplyKeyboardRemove())
 
 
-@bot.message_handler(func=lambda message: message.text == "English")
-def english_answer(message):
-    user_data[message.chat.id] = {"language": "English"}
-    save_language(message.chat.id, "English")
-    send_emoji = emoji.emojize(":grinning_face:")
-    bot.send_message(
-        message.from_user.id,
-        f"Hello! I'am telegram bot, that can replace Chat GPT for you. Ask me any questions.{send_emoji}",
-        reply_markup=ReplyKeyboardRemove(),
-    )
-
-
-@bot.message_handler(func=lambda message: message.text == "Polish")
-def polish_answer(message):
-    user_data[message.chat.id] = {"language": "Polish"}
-    save_language(message.chat.id, "Polish")
-    send_emoji = emoji.emojize(":grinning_face:")
-    bot.send_message(
-        message.from_user.id,
-        f"Cześć! Jestem telegram botem, który może zastąpić Czat GPT dla Ciebie. Zadaj mi jakieś pytania. {send_emoji}",
-        reply_markup=ReplyKeyboardRemove(),
-    )
+@bot.message_handler(
+    func=lambda message: message.text in ["Russian", "English", "Polish"]
+)
+def language_selection(message):
+    greetings = {
+        "Russian": "Привет! Я телеграмм бот, который может заменить тебе Chat GPT. Задавай мне любые вопросы. 😊",
+        "English": "Hello! I'm a Telegram bot that can replace ChatGPT for you. Ask me any questions. 😊",
+        "Polish": "Cześć! Jestem botem Telegram, który może zastąpić Ci ChatGPT. Zadaj mi pytania. 😊",
+    }
+    set_language(message, message.text, greetings[message.text])
 
 
 @bot.message_handler(func=lambda message: True)
 def ask_question(message):
-    if message.chat.id not in user_data:
-        user_data[message.chat.id] = {"language": "English"}
-    user_data[message.chat.id]["answer"] = message.text
+    """Обрабатывает вопросы пользователя и отправляет их на API."""
+    chat_id = message.chat.id
+    if chat_id not in user_data:
+        user_data[chat_id] = {"language": "English"}
+
+    user_data[chat_id]["answer"] = message.text
     log_command(message, "ask", {"question": message.text})
-    send_answer(message.chat.id)
+    send_answer(chat_id)
 
 
-def send_answer(user_question):
+def send_answer(chat_id):
     try:
-        question = user_data[user_question]["answer"]
+        question = user_data[chat_id]["answer"]
         response_data = get_response(question)
+
         if response_data and "result" in response_data:
             content = response_data["result"]
-            if user_data[user_question]["language"] == "Russian":
+            user_lang = user_data[chat_id]["language"]
+
+            if user_lang in ["Russian", "Polish"]:
                 try:
+                    lang_code = "ru" if user_lang == "Russian" else "pl"
                     translated_content = translator.translate(
-                        content, src="en", dest="ru"
+                        content, src="en", dest=lang_code
                     ).text
                 except Exception as e:
                     logger.warning(f"Translation failed: {e}")
                     bot.send_message(
-                        user_question, "Ошибка перевода. Отправлен ответ на английском."
+                        chat_id, "Translation error. Sending the response in English."
                     )
                     translated_content = content
-                bot.send_message(user_question, f"Ответ: {translated_content}")
-            elif user_data[user_question]["language"] == "Polish":
-                try:
-                    translated_content = translator.translate(
-                        content, src="en", dest="pl"
-                    ).text
-                except Exception as e:
-                    logger.warning(f"Translation failed: {e}")
-                    bot.send_message(
-                        user_question,
-                        "Błąd tłumaczenia. Wysłana odpowiedź po angielsku.",
-                    )
-                    translated_content = content
-                bot.send_message(user_question, f"Odpowiedż: {translated_content}")
+                bot.send_message(
+                    chat_id,
+                    (
+                        f"Ответ: {translated_content}"
+                        if user_lang == "Russian"
+                        else f"Odpowiedź: {translated_content}"
+                    ),
+                )
             else:
-                bot.send_message(user_question, f"Answer: {content}")
+                bot.send_message(chat_id, f"Answer: {content}")
+
         else:
             logger.error("Empty or invalid response from API")
             bot.send_message(
-                user_question, "An error occurred while retrieving the response."
+                chat_id, "An error occurred while retrieving the response."
             )
+
     except Exception as e:
+        logger.error(f"An error occurred: {e}")
         bot.send_message(
-            user_question,
+            chat_id,
             "An error occurred while processing your request. Please try again.",
         )
-        logger.error(f'An error occurred:", {e}')
 
 
 def get_response(question):
@@ -163,12 +146,10 @@ def get_response(question):
         if response.status_code == 200:
             return response.json()
         else:
-            logger.error(
-                f"An error occurred while retrieving the response from API. Status code: {response.status_code}"
-            )
+            logger.error(f"API error. Status code: {response.status_code}")
             return None
     except requests.exceptions.RequestException as e:
-        logger.error(f"An error while calling API: {e}")
+        logger.error(f"API request error: {e}")
         return None
 
 
@@ -182,29 +163,43 @@ def history(message):
                 for entry in history_data[chat_id]
             ]
         )
-        bot.send_message(chat_id, f"History of request: \n{history_text}")
+        bot.send_message(chat_id, f"History of requests:\n{history_text}")
     else:
-        bot.send_message(chat_id, "History of request is empty.")
+        bot.send_message(chat_id, "History of requests is empty.")
 
 
 def log_command(message, command, params=None):
     if params is None:
         params = {}
+
     chat_id = message.chat.id
     if chat_id not in history_data:
         history_data[chat_id] = []
+
     history_data[chat_id].append(
         {"command": command, "params": params, "text": message.text}
     )
 
 
 @bot.message_handler(commands=["statistics"])
-def statistics():
+def statistics(message):
     stats = get_statistics()
     if stats:
         stats_message = "\n".join([f"{row[0]}: {row[1]}" for row in stats])
-        bot.send.message(
+        bot.send_message(
             message.chat.id, f"Language selection statistics:\n{stats_message}"
         )
     else:
-        bot.send.message(message.chat.id, "No statics available")
+        bot.send_message(message.chat.id, "No statistics available.")
+
+
+def get_statistics():
+    return [("Russian", 5), ("English", 10), ("Polish", 3)]
+
+
+if __name__ == "__main__":
+    logger.info("Bot is running.")
+    try:
+        bot.polling(none_stop=True)
+    except Exception as e:
+        logger.critical(f"Critical error in polling: {e}")
