@@ -40,11 +40,11 @@ def choice_button():
 def start(message):
     log_command(message, "start")
 
-    if os.path.exists("gpt.png"):
-        with open("gpt.png", "rb") as photo:
+    if os.path.exists("gpt.jpg"):
+        with open("gpt.jpg", "rb") as photo:
             bot.send_photo(message.chat.id, photo=photo)
     else:
-        logger.warning('Image "gpt.png" not found. Skipping photo.')
+        logger.warning('Image "gpt.jpg" not found. Skipping photo.')
 
     bot.send_message(
         message.chat.id,
